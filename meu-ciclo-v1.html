@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#d94f70">
+<meta name="description" content="Meu Ciclo - acompanhamento menstrual">
+<title>Meu Ciclo</title>
+<style>
+:root{
+  --bg:#fff7f9;--card:#fff;--text:#30242a;--muted:#8b727b;--primary:#d94f70;
+  --primary2:#b93658;--soft:#fde5eb;--border:#f0d9df;--green:#62a879;
+  --shadow:0 8px 24px rgba(85,38,52,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{max-width:720px;margin:auto;min-height:100vh;padding-bottom:90px}
+header{padding:24px 18px 12px;display:flex;justify-content:space-between;align-items:center}
+.brand{font-size:22px;font-weight:800}.brand span{color:var(--primary)}
+.icon-btn{border:0;background:var(--card);width:42px;height:42px;border-radius:14px;box-shadow:var(--shadow)}
+main{padding:0 16px}
+.screen{display:none}.screen.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:18px;margin:12px 0;box-shadow:var(--shadow)}
+.hero{text-align:center;padding:26px 18px;background:linear-gradient(145deg,#fff,#fff0f4)}
+.hero .small{color:var(--muted);font-size:14px}
+.cycle-ring{width:150px;height:150px;margin:18px auto;border-radius:50%;display:grid;place-items:center;
+background:conic-gradient(var(--primary) 0 43%,#f6dce3 43% 100%);position:relative}
+.cycle-ring:after{content:"";position:absolute;inset:10px;background:white;border-radius:50%}
+.ring-text{position:relative;z-index:1}.day{font-size:36px;font-weight:800}.day-label{font-size:12px;color:var(--muted)}
+.next{font-weight:700}.muted{color:var(--muted)}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{padding:14px;background:#fff8fa;border-radius:16px}.stat b{display:block;font-size:19px;margin-top:4px}
+.section-title{font-size:18px;font-weight:800;margin:20px 2px 8px}
+.btn{border:0;border-radius:14px;padding:12px 16px;font-weight:700;background:var(--primary);color:#fff}
+.btn.secondary{background:var(--soft);color:var(--primary2)}
+.btn.danger{background:#ffe5e5;color:#b52e2e}
+.btn.full{width:100%}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);
+border-top:1px solid var(--border);display:flex;justify-content:center;z-index:10;padding:8px max(8px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom))}
+.bottom-nav button{border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;min-width:68px}
+.bottom-nav button.active{color:var(--primary);font-weight:800}.nav-icon{font-size:21px}
+.calendar-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.calendar-head button{border:0;background:var(--soft);color:var(--primary);border-radius:10px;width:36px;height:36px}
+.week,.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.week div{text-align:center;font-size:11px;color:var(--muted);padding:5px}
+.day-cell{min-height:55px;border:1px solid transparent;background:#fff;border-radius:12px;padding:5px;text-align:center;position:relative}
+.day-cell.empty{background:transparent}.day-cell.today{border-color:var(--primary);font-weight:800}
+.day-cell.period{background:#ffdce5;color:#a52e4e}.day-cell.fertile{background:#e5f5e9;color:#34724a}
+.day-cell.ovulation{box-shadow:inset 0 0 0 2px #63a87a}
+.day-cell .dots{font-size:10px;margin-top:4px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:12px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.form-group{margin:14px 0}.form-group label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}
+input,select,textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:13px;background:#fff;color:var(--text);outline:none}
+textarea{min-height:90px;resize:vertical}
+.chips{display:flex;gap:7px;flex-wrap:wrap}.chip{border:1px solid var(--border);background:#fff;padding:9px 11px;border-radius:12px}
+.chip.selected{background:var(--soft);border-color:#e99aad;color:var(--primary2);font-weight:700}
+.symptoms-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.history-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding:13px 0}
+.history-item:last-child{border-bottom:0}
+.modal{position:fixed;inset:0;background:rgba(35,20,25,.45);display:none;align-items:flex-end;z-index:20}
+.modal.show{display:flex}.modal-box{background:#fff;width:100%;max-width:720px;margin:auto 0 0;border-radius:24px 24px 0 0;padding:20px;max-height:90vh;overflow:auto}
+.modal-top{display:flex;justify-content:space-between;align-items:center}.close{border:0;background:#f6e8ec;border-radius:10px;width:36px;height:36px}
+.toast{position:fixed;left:50%;bottom:85px;transform:translateX(-50%);background:#30242a;color:#fff;padding:11px 16px;border-radius:12px;display:none;z-index:30;font-size:13px}
+.empty-state{text-align:center;padding:25px;color:var(--muted)}
+.dark{--bg:#1e171a;--card:#2a2024;--text:#f7e9ed;--muted:#bdaab0;--border:#46343b;--soft:#493039}
+.dark input,.dark select,.dark textarea,.dark .day-cell{background:#30252a;color:var(--text)}
+.dark .hero{background:linear-gradient(145deg,#2d2327,#39252c)}
+.dark .cycle-ring:after{background:#2a2024}.dark .bottom-nav{background:rgba(42,32,36,.96)}
+.dark .stat{background:#33272c}
+@media(min-width:650px){.bottom-nav{left:50%;right:auto;width:720px;transform:translateX(-50%);border-radius:18px 18px 0 0}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand">🌸 Meu <span>Ciclo</span></div>
+  <button class="icon-btn" id="themeBtn" title="Tema">🌙</button>
+</header>
+
+<main>
+<section id="dashboard" class="screen active">
+  <div class="card hero">
+    <div class="small" id="todayText"></div>
+    <div class="cycle-ring">
+      <div class="ring-text"><div class="day" id="cycleDay">—</div><div class="day-label">DIA DO CICLO</div></div>
+    </div>
+    <div class="next">Próxima menstruação</div>
+    <div id="nextPeriod" style="font-size:22px;font-weight:800;margin-top:5px">Cadastre um ciclo</div>
+    <div class="muted" id="countdown"></div>
+  </div>
+
+  <div class="section-title">Resumo</div>
+  <div class="grid2">
+    <div class="stat">🩸 Ciclo médio<b id="avgCycle">28 dias</b></div>
+    <div class="stat">🌸 Fase<b id="phase">—</b></div>
+    <div class="stat">📅 Menstruação média<b id="avgPeriod">— dias</b></div>
+    <div class="stat">🗓️ Ciclos registrados<b id="cycleCount">0</b></div>
+  </div>
+
+  <div class="section-title">Hoje</div>
+  <div class="card">
+    <div class="row" id="todaySummary"><span class="muted">Nenhum registro para hoje.</span></div>
+    <button class="btn full" style="margin-top:14px" onclick="openLog()">＋ Registrar hoje</button>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:800">🌸 Previsão</div>
+    <p class="muted" style="font-size:13px">As datas são estimativas baseadas nos ciclos registrados e podem variar.</p>
+  </div>
+</section>
+
+<section id="calendarScreen" class="screen">
+  <div class="section-title">Calendário</div>
+  <div class="card">
+    <div class="calendar-head">
+      <button onclick="changeMonth(-1)">‹</button><strong id="monthTitle"></strong><button onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="week"><div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div></div>
+    <div class="calendar" id="calendar"></div>
+    <div class="legend">
+      <span><i class="dot" style="background:#ffdce5"></i>Menstruação</span>
+      <span><i class="dot" style="background:#e5f5e9"></i>Período fértil</span>
+      <span>⭐ Ovulação estimada</span>
+    </div>
+  </div>
+</section>
+
+<section id="historyScreen" class="screen">
+  <div class="section-title">Histórico</div>
+  <div class="card">
+    <div id="history"></div>
+    <button class="btn secondary full" onclick="openSettings()">⚙️ Configurar ciclo</button>
+  </div>
+</section>
+
+<section id="statsScreen" class="screen">
+  <div class="section-title">Estatísticas</div>
+  <div class="grid2">
+    <div class="stat">📏 Menor ciclo<b id="minCycle">—</b></div>
+    <div class="stat">📏 Maior ciclo<b id="maxCycle">—</b></div>
+    <div class="stat">🩸 Menor menstruação<b id="minPeriod">—</b></div>
+    <div class="stat">🩸 Maior menstruação<b id="maxPeriod">—</b></div>
+  </div>
+  <div class="card">
+    <strong>📊 Duração dos ciclos</strong>
+    <div id="bars" style="margin-top:18px"></div>
+  </div>
+</section>
+
+<section id="settingsScreen" class="screen">
+  <div class="section-title">Configurações</div>
+  <div class="card">
+    <div class="form-group"><label>Nome</label><input id="nameInput" placeholder="Ex.: Ana"></div>
+    <div class="form-group"><label>Duração média do ciclo (dias)</label><input id="cycleLength" type="number" min="15" max="60" value="28"></div>
+    <div class="form-group"><label>Duração média da menstruação (dias)</label><input id="periodLength" type="number" min="1" max="15" value="5"></div>
+    <button class="btn full" onclick="saveSettings()">Salvar configurações</button>
+  </div>
+  <div class="card">
+    <strong>🔐 Dados</strong>
+    <p class="muted" style="font-size:13px">Nesta versão, os dados ficam armazenados somente neste navegador usando localStorage.</p>
+    <div class="row">
+      <button class="btn secondary" onclick="exportData()">Exportar dados</button>
+      <button class="btn danger" onclick="clearData()">Apagar tudo</button>
+    </div>
+  </div>
+</section>
+</main>
+
+<nav class="bottom-nav">
+  <button class="active" data-screen="dashboard"><span class="nav-icon">🏠</span>Início</button>
+  <button data-screen="calendarScreen"><span class="nav-icon">📅</span>Calendário</button>
+  <button onclick="openLog()"><span class="nav-icon">➕</span>Registrar</button>
+  <button data-screen="statsScreen"><span class="nav-icon">📊</span>Estatísticas</button>
+  <button data-screen="settingsScreen"><span class="nav-icon">⚙️</span>Ajustes</button>
+</nav>
+</div>
+
+<div class="modal" id="logModal">
+<div class="modal-box">
+  <div class="modal-top"><h2 style="margin:0">Registrar</h2><button class="close" onclick="closeLog()">✕</button></div>
+  <div class="form-group"><label>Data</label><input type="date" id="logDate"></div>
+  <div class="form-group"><label>Menstruação / fluxo</label>
+    <div class="chips" id="flowChips">
+      <button class="chip" data-value="Nenhum">⚪ Nenhum</button>
+      <button class="chip" data-value="Muito leve">🩷 Muito leve</button>
+      <button class="chip" data-value="Leve">🔴 Leve</button>
+      <button class="chip" data-value="Moderado">🔴🔴 Moderado</button>
+      <button class="chip" data-value="Intenso">🔴🔴🔴 Intenso</button>
+    </div>
+  </div>
+  <div class="form-group"><label>Humor</label>
+    <div class="chips" id="moodChips">
+      <button class="chip" data-value="😀 Muito feliz">😀</button><button class="chip" data-value="🙂 Bem">🙂</button>
+      <button class="chip" data-value="😐 Normal">😐</button><button class="chip" data-value="😕 Irritada">😕</button>
+      <button class="chip" data-value="😢 Triste">😢</button><button class="chip" data-value="🥱 Cansada">🥱</button>
+    </div>
+  </div>
+  <div class="form-group"><label>Sintomas</label>
+    <div class="symptoms-grid" id="symptoms">
+      <button class="chip" data-value="Cólicas">😣 Cólicas</button><button class="chip" data-value="Dor de cabeça">🤕 Dor de cabeça</button>
+      <button class="chip" data-value="Dor lombar">🦴 Dor lombar</button><button class="chip" data-value="Inchaço">💨 Inchaço</button>
+      <button class="chip" data-value="Náusea">🤢 Náusea</button><button class="chip" data-value="Cansaço">🥱 Cansaço</button>
+      <button class="chip" data-value="Sensibilidade nos seios">💗 Seios sensíveis</button><button class="chip" data-value="Acne">🔴 Acne</button>
+    </div>
+  </div>
+  <div class="form-group"><label>Observação</label><textarea id="note" placeholder="Como foi o dia?"></textarea></div>
+  <button class="btn full" onclick="saveLog()">Salvar registro</button>
+  <button class="btn danger full" id="deleteLog" style="margin-top:8px;display:none" onclick="deleteLog()">Excluir registro</button>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY="meuCicloV1";
+let state=JSON.parse(localStorage.getItem(KEY)||"null")||{
+  settings:{name:"",cycleLength:28,periodLength:5,dark:false},
+  logs:{}, cycles:[]
+};
+let viewDate=new Date(), editingDate=null, selectedFlow="", selectedMood="", selectedSymptoms=[];
+
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function pad(n){return String(n).padStart(2,"0")}
+function iso(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function parse(s){let [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)}
+function diff(a,b){return Math.round((b-a)/86400000)}
+function fmt(s){return parse(s).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"})}
+function today(){return iso(new Date())}
+function showToast(t){let x=document.getElementById("toast");x.textContent=t;x.style.display="block";setTimeout(()=>x.style.display="none",2200)}
+
+function nav(id,btn){
+ document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ document.querySelectorAll(".bottom-nav button").forEach(x=>x.classList.remove("active"));
+ if(btn)btn.classList.add("active");
+ if(id==="calendarScreen")renderCalendar();
+ if(id==="historyScreen"||id==="statsScreen")renderStats();
+}
+document.querySelectorAll(".bottom-nav button[data-screen]").forEach(b=>b.onclick=()=>nav(b.dataset.screen,b));
+
+function getPeriods(){
+ return Object.entries(state.logs).filter(([d,v])=>v.flow&&v.flow!=="Nenhum").map(([d])=>d).sort();
+}
+function getStarts(){
+ let dates=getPeriods(), starts=[];
+ dates.forEach(d=>{let p=starts[starts.length-1]; if(!p||diff(parse(p),parse(d))>1) starts.push(d)});
+ return starts;
+}
+function averageCycle(){
+ let s=getStarts(), vals=[]; for(let i=1;i<s.length;i++) vals.push(diff(parse(s[i-1]),parse(s[i])));
+ return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):Number(state.settings.cycleLength);
+}
+function currentStart(){
+ let s=getStarts().filter(d=>parse(d)<=new Date()); return s.length?s[s.length-1]:null;
+}
+function predicted(){
+ let s=currentStart(); if(!s)return null;
+ let avg=averageCycle(), d=parse(s);d.setDate(d.getDate()+avg);return d;
+}
+function fertileInfo(){
+ let p=predicted(); if(!p)return null;
+ let ov=new Date(p);ov.setDate(ov.getDate()-14);
+ let start=new Date(ov);start.setDate(start.getDate()-5);
+ let end=new Date(ov);end.setDate(end.getDate()+1);
+ return {start,end,ov};
+}
+function phase(){
+ let s=currentStart();if(!s)return "—";
+ let start=parse(s), cd=diff(start,new Date())+1, avg=averageCycle(), ov=Math.max(1,avg-14);
+ if(cd<=Number(state.settings.periodLength))return "Menstruação";
+ if(cd>=ov-5&&cd<=ov+1)return "Período fértil";
+ if(cd<ov)return "Fase folicular";
+ return "Fase lútea";
+}
+
+function renderDashboard(){
+ let now=new Date();
+ document.getElementById("todayText").textContent=now.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+ let s=currentStart(), day=s?diff(parse(s),now)+1:null;
+ document.getElementById("cycleDay").textContent=day||"—";
+ document.getElementById("phase").textContent=phase();
+ document.getElementById("avgCycle").textContent=averageCycle()+" dias";
+ document.getElementById("cycleCount").textContent=getStarts().length;
+ let p=predicted();
+ document.getElementById("nextPeriod").textContent=p?p.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"}):"Cadastre um ciclo";
+ document.getElementById("countdown").textContent=p?"aproximadamente "+Math.max(0,diff(now,p))+" dias":"";
+ let periods=getStarts(), durations=[];
+ periods.forEach((st,i)=>{let next=periods[i+1]?parse(periods[i+1]):null;if(next)durations.push(diff(parse(st),next));});
+ document.getElementById("avgPeriod").textContent=(durations.length?Math.round(durations.reduce((a,b)=>a+b,0)/durations.length):state.settings.periodLength)+" dias";
+ let log=state.logs[today()], box=document.getElementById("todaySummary");
+ if(!log){box.innerHTML='<span class="muted">Nenhum registro para hoje.</span>'}
+ else{
+   let arr=[];if(log.flow&&log.flow!=="Nenhum")arr.push("🩸 "+log.flow);if(log.mood)arr.push(log.mood.split(" ")[0]);if(log.symptoms?.length)arr.push("😣 "+log.symptoms.length+" sintoma(s)");
+   box.innerHTML=arr.map(x=>`<span class="chip selected">${x}</span>`).join("")||'<span class="muted">Registro salvo.</span>';
+ }
+}
+function renderCalendar(){
+ let y=viewDate.getFullYear(),m=viewDate.getMonth();
+ document.getElementById("monthTitle").textContent=new Date(y,m,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+ let first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate(), el=document.getElementById("calendar");el.innerHTML="";
+ let f=fertileInfo();
+ for(let i=0;i<first;i++){let x=document.createElement("div");x.className="day-cell empty";el.appendChild(x)}
+ for(let n=1;n<=days;n++){
+   let d=new Date(y,m,n), ds=iso(d), x=document.createElement("button");x.className="day-cell";x.textContent=n;
+   if(ds===today())x.classList.add("today");
+   if(f&&d>=f.start&&d<=f.end)x.classList.add("fertile");
+   if(f&&iso(d)===iso(f.ov))x.classList.add("ovulation");
+   let log=state.logs[ds];
+   if(log?.flow&&log.flow!=="Nenhum")x.classList.add("period");
+   if(log){let dots=document.createElement("div");dots.className="dots";dots.textContent=(log.mood?log.mood.split(" ")[0]:"")+(log.symptoms?.length?" •":"");x.appendChild(dots)}
+   x.onclick=()=>openLog(ds);el.appendChild(x);
+ }
+}
+function changeMonth(n){viewDate.setMonth(viewDate.getMonth()+n);renderCalendar()}
+
+function openLog(date=today()){
+ editingDate=date;let l=state.logs[date]||{};
+ document.getElementById("logDate").value=date;document.getElementById("note").value=l.note||"";
+ selectedFlow=l.flow||"";selectedMood=l.mood||"";selectedSymptoms=l.symptoms||[];
+ updateChips();document.getElementById("deleteLog").style.display=state.logs[date]?"block":"none";
+ document.getElementById("logModal").classList.add("show");
+}
+function closeLog(){document.getElementById("logModal").classList.remove("show")}
+function updateChips(){
+ document.querySelectorAll("#flowChips .chip").forEach(b=>b.classList.toggle("selected",b.dataset.value===selectedFlow));
+ document.querySelectorAll("#moodChips .chip").forEach(b=>b.classList.toggle("selected",b.dataset.value===selectedMood));
+ document.querySelectorAll("#symptoms .chip").forEach(b=>b.classList.toggle("selected",selectedSymptoms.includes(b.dataset.value)));
+}
+document.querySelectorAll("#flowChips .chip").forEach(b=>b.onclick=()=>{selectedFlow=b.dataset.value;updateChips()});
+document.querySelectorAll("#moodChips .chip").forEach(b=>b.onclick=()=>{selectedMood=b.dataset.value;updateChips()});
+document.querySelectorAll("#symptoms .chip").forEach(b=>b.onclick=()=>{let v=b.dataset.value;selectedSymptoms=selectedSymptoms.includes(v)?selectedSymptoms.filter(x=>x!==v):[...selectedSymptoms,v];updateChips()});
+document.getElementById("logDate").onchange=e=>{editingDate=e.target.value};
+
+function saveLog(){
+ let d=document.getElementById("logDate").value;if(!d)return;
+ state.logs[d]={flow:selectedFlow||"Nenhum",mood:selectedMood,symptoms:selectedSymptoms,note:document.getElementById("note").value};
+ save();closeLog();renderAll();showToast("Registro salvo 💗");
+}
+function deleteLog(){
+ if(!editingDate)return;delete state.logs[editingDate];save();closeLog();renderAll();showToast("Registro excluído");
+}
+
+function renderStats(){
+ let starts=getStarts(), vals=[];for(let i=1;i<starts.length;i++)vals.push(diff(parse(starts[i-1]),parse(starts[i])));
+ document.getElementById("minCycle").textContent=vals.length?Math.min(...vals)+" dias":"—";
+ document.getElementById("maxCycle").textContent=vals.length?Math.max(...vals)+" dias":"—";
+ let pd=getPeriods(), runs=[];for(let i=0;i<pd.length;i++){let len=1;while(pd[i+len]&&diff(parse(pd[i+len-1]),parse(pd[i+len]))===1)len++;runs.push(len);i+=len-1}
+ document.getElementById("minPeriod").textContent=runs.length?Math.min(...runs)+" dias":"—";
+ document.getElementById("maxPeriod").textContent=runs.length?Math.max(...runs)+" dias":"—";
+ let bars=document.getElementById("bars");bars.innerHTML="";
+ vals.slice(-8).forEach((v,i)=>{let row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:8px;margin:9px 0";row.innerHTML=`<span style="width:55px;font-size:12px">${i+1}</span><div style="height:22px;border-radius:8px;background:var(--primary);width:${Math.min(100,v/40*100)}%"></div><b>${v}</b>`;bars.appendChild(row)});
+ if(!vals.length)bars.innerHTML='<div class="empty-state">Registre pelo menos dois ciclos para ver estatísticas.</div>';
+ let h=document.getElementById("history");h.innerHTML="";
+ starts.slice().reverse().forEach((st,i)=>{
+   let next=starts[starts.indexOf(st)+1], dur=next?diff(parse(st),parse(next)):"Atual";
+   let x=document.createElement("div");x.className="history-item";x.innerHTML=`<div><b>🩸 ${fmt(st)}</b><div class="muted" style="font-size:12px">Ciclo ${starts.length-i}</div></div><strong>${dur}${typeof dur==="number"?" dias":""}</strong>`;h.appendChild(x);
+ });
+ if(!starts.length)h.innerHTML='<div class="empty-state">Nenhum ciclo registrado ainda.</div>';
+}
+function openSettings(){
+ nav("settingsScreen",document.querySelector('[data-screen="settingsScreen"]'));
+ document.getElementById("nameInput").value=state.settings.name||"";
+ document.getElementById("cycleLength").value=state.settings.cycleLength;
+ document.getElementById("periodLength").value=state.settings.periodLength;
+}
+function saveSettings(){
+ state.settings.name=document.getElementById("nameInput").value.trim();
+ state.settings.cycleLength=Number(document.getElementById("cycleLength").value)||28;
+ state.settings.periodLength=Number(document.getElementById("periodLength").value)||5;
+ save();renderAll();showToast("Configurações salvas");
+}
+function exportData(){
+ let blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download="meu-ciclo-backup.json";a.click();URL.revokeObjectURL(a.href);
+}
+function clearData(){
+ if(confirm("Apagar todos os registros e configurações? Esta ação não pode ser desfeita.")){
+   localStorage.removeItem(KEY);location.reload();
+ }
+}
+document.getElementById("themeBtn").onclick=()=>{
+ state.settings.dark=!state.settings.dark;document.body.classList.toggle("dark",state.settings.dark);
+ document.getElementById("themeBtn").textContent=state.settings.dark?"☀️":"🌙";save();
+};
+function renderAll(){renderDashboard();renderCalendar();renderStats()}
+document.body.classList.toggle("dark",!!state.settings.dark);
+document.getElementById("themeBtn").textContent=state.settings.dark?"☀️":"🌙";
+renderAll();
+</script>
+</body>
+</html>
